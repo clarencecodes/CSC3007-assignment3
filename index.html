@@ -35,6 +35,15 @@
 
           let geopath = d3.geoPath().projection(projection);
 
+          // Calculate total population (needed to calculate proportions of population per district later)
+          var totalPop = 0;
+          for (let item of data[1]) {
+            if (item['Population'] != '-') {
+              totalPop += parseFloat(item['Population']);
+            }
+          }
+          console.log('Total Population:', totalPop);
+
           svg
             .append('g')
             .attr('id', 'districts')
@@ -43,7 +52,51 @@
             .enter()
             .append('path')
             .attr('d', geopath)
-            .attr('fill', 'black');
+            .attr('fill', feature => {
+              let subzoneName = feature['properties']['Subzone Name'];
+              let areaPopulation = data[1].find(item => {
+                return (
+                  item['Subzone'].toLowerCase() == subzoneName.toLowerCase()
+                );
+              });
+
+              if (areaPopulation == null) {
+                let planningAreaName =
+                  feature['properties']['Planning Area Name'];
+                areaPopulation = data[1].find(item => {
+                  return (
+                    item['Planning Area'].toLowerCase() ==
+                    planningAreaName.toLowerCase()
+                  );
+                });
+              }
+
+              var population = areaPopulation['Population'];
+              if (population == '-') {
+                population = 0.0;
+              } else {
+                population = parseFloat(population, 10);
+              }
+
+              let proportion = (population / totalPop) * 100; // Proportion in percentage
+
+              // Return color based on proportion of population
+              if (proportion < 0.0001) {
+                return '#FFEBD6';
+              } else if (0.0001 <= proportion && proportion < 0.001) {
+                return '#F5CBAE';
+              } else if (0.001 <= proportion && proportion < 0.01) {
+                return '#EBA988';
+              } else if (0.01 <= proportion && proportion < 0.1) {
+                return '#E08465';
+              } else if (0.1 <= proportion && proportion < 1.0) {
+                return '#D65C45';
+              } else if (1.0 <= proportion && proportion < 2.0) {
+                return '#CC3528';
+              } else {
+                return '#C40A09';
+              }
+            });
         }
       );
     </script>
