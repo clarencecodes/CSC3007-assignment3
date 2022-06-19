@@ -7,96 +7,136 @@
   <style></style>
 </head>
 
+<style>
+  body {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: slategray;
+  }
+
+  h2 {
+    text-align: center;
+  }
+
+  #legend {
+    width: 400px;
+    height: 40px;
+    float: right;
+  }
+</style>
+
 <body>
-  <h2 style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-        text-align: center;
-        color: slategray;">
+  <h2>
     Population in Singapore, 2021
-    </h1>
-    <svg></svg>
-    <script type="module">
-      import * as d3 from 'https://cdn.skypack.dev/d3@7';
+  </h2>
+  <svg></svg>
+  <div id="legend">
+    <h5>Legend</h5>
+    <svg width="39" height="10">
+      <rect width="35" height="10" style="fill:#FFEBD6;stroke-width:1;stroke:slategray" />
+    </svg>
+    <svg width="39" height="10">
+      <rect width="35" height="10" style="fill:#F5CBAE;stroke-width:1;stroke:slategray" />
+    </svg>
+    <svg width="39" height="10">
+      <rect width="35" height="10" style="fill:rgb#EBA988;stroke-width:1;stroke:slategray" />
+    </svg>
+    <svg width="39" height="10">
+      <rect width="35" height="10" style="fill:#D65C45;stroke-width:1;stroke:slategray" />
+    </svg>
+    <svg width="39" height="10">
+      <rect width="35" height="10" style="fill:#CC3528;stroke-width:1;stroke:slategray" />
+    </svg>
+    <svg width="39" height="10">
+      <rect width="35" height="10" style="fill:#C40A09;stroke-width:1;stroke:slategray" />
+    </svg>
+    <svg width="39" height="10">
+      <rect width="35" height="10" style="fill:#500A09;stroke-width:1;stroke:slategray" />
+    </svg>
+    <p>8000 16000 24000 32000 40000 48000 64000</p>
+  </div>
+  <script type="module">
+    import * as d3 from 'https://cdn.skypack.dev/d3@7';
 
-      let width = 1000,
-        height = 600;
+    let width = 1000,
+      height = 480;
 
-      let svg = d3.select('svg').attr('viewBox', '0 0 ' + width + ' ' + height);
+    let svg = d3.select('svg').attr('viewBox', '0 0 ' + width + ' ' + height);
 
-      // Load external data
-      Promise.all([d3.json('sgmap.json'), d3.csv('population2021.csv')]).then(
-        data => {
-          console.log(data[0]);
-          console.log(data[1]);
+    // Load external data
+    Promise.all([d3.json('sgmap.json'), d3.csv('population2021.csv')]).then(
+      data => {
+        console.log(data[0]);
+        console.log(data[1]);
 
-          // Map and projection
-          var projection = d3
-            .geoMercator()
-            .center([103.851959, 1.29027])
-            .fitExtent(
-              [
-                [20, 20],
-                [980, 580],
-              ],
-              data[0]
-            );
+        // Map and projection
+        var projection = d3
+          .geoMercator()
+          .center([103.851959, 1.29027])
+          .fitExtent(
+            [
+              [20, 20],
+              [980, 580],
+            ],
+            data[0]
+          );
 
-          let geopath = d3.geoPath().projection(projection);
+        let geopath = d3.geoPath().projection(projection);
 
-          svg
-            .append('g')
-            .attr('id', 'districts')
-            .selectAll('path')
-            .data(data[0].features)
-            .enter()
-            .append('path')
-            .attr('d', geopath)
-            .attr('fill', feature => {
-              let subzoneName = feature['properties']['Subzone Name'];
-              let areaPopulation = data[1].find(item => {
+        svg
+          .append('g')
+          .attr('id', 'districts')
+          .selectAll('path')
+          .data(data[0].features)
+          .enter()
+          .append('path')
+          .attr('d', geopath)
+          .attr('fill', feature => {
+            let subzoneName = feature['properties']['Subzone Name'];
+            let areaPopulation = data[1].find(item => {
+              return (
+                item['Subzone'].toLowerCase() == subzoneName.toLowerCase()
+              );
+            });
+
+            if (areaPopulation == null) {
+              let planningAreaName =
+                feature['properties']['Planning Area Name'];
+              areaPopulation = data[1].find(item => {
                 return (
-                  item['Subzone'].toLowerCase() == subzoneName.toLowerCase()
+                  item['Planning Area'].toLowerCase() ==
+                  planningAreaName.toLowerCase()
                 );
               });
+            }
 
-              if (areaPopulation == null) {
-                let planningAreaName =
-                  feature['properties']['Planning Area Name'];
-                areaPopulation = data[1].find(item => {
-                  return (
-                    item['Planning Area'].toLowerCase() ==
-                    planningAreaName.toLowerCase()
-                  );
-                });
-              }
+            var population = areaPopulation['Population'];
+            if (population == '-') {
+              population = 0.0;
+            } else {
+              population = parseFloat(population, 10);
+            }
 
-              var population = areaPopulation['Population'];
-              if (population == '-') {
-                population = 0.0;
-              } else {
-                population = parseFloat(population, 10);
-              }
-
-              if (population < 8000) {
-                return '#FFEBD6';
-              } else if (8000 <= population && population < 16000) {
-                return '#F5CBAE';
-              } else if (16000 <= population && population < 24000) {
-                return '#EBA988';
-              } else if (24000 <= population && population < 32000) {
-                return '#E08465';
-              } else if (32000 <= population && population < 40000) {
-                return '#D65C45';
-              } else if (40000 <= population && population < 48000) {
-                return '#CC3528';
-              } else if (48000 <= population && population < 64000) {
-                return '#C40A09';
-              } else {
-                return '#500A09';
-              }
-            });
-        }
-      );
-    </script>
+            if (population < 8000) {
+              return '#FFEBD6';
+            } else if (8000 <= population && population < 16000) {
+              return '#F5CBAE';
+            } else if (16000 <= population && population < 24000) {
+              return '#EBA988';
+            } else if (24000 <= population && population < 32000) {
+              return '#E08465';
+            } else if (32000 <= population && population < 40000) {
+              return '#D65C45';
+            } else if (40000 <= population && population < 48000) {
+              return '#CC3528';
+            } else if (48000 <= population && population < 64000) {
+              return '#C40A09';
+            } else {
+              return '#500A09';
+            }
+          });
+      }
+    );
+  </script>
 </body>
 
 </html>
