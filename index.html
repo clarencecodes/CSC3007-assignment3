@@ -41,15 +41,6 @@
 
           let geopath = d3.geoPath().projection(projection);
 
-          // Calculate total population (needed to calculate proportions of population per district later)
-          var totalPop = 0;
-          for (let item of data[1]) {
-            if (item['Population'] != '-') {
-              totalPop += parseFloat(item['Population']);
-            }
-          }
-          console.log('Total Population:', totalPop);
-
           svg
             .append('g')
             .attr('id', 'districts')
@@ -84,23 +75,22 @@
                 population = parseFloat(population, 10);
               }
 
-              let proportion = (population / totalPop) * 100; // Proportion in percentage
-
-              // Return color based on proportion of population
-              if (proportion < 0.0001) {
+              if (population < 8000) {
                 return '#FFEBD6';
-              } else if (0.0001 <= proportion && proportion < 0.001) {
+              } else if (8000 <= population && population < 16000) {
                 return '#F5CBAE';
-              } else if (0.001 <= proportion && proportion < 0.01) {
+              } else if (16000 <= population && population < 24000) {
                 return '#EBA988';
-              } else if (0.01 <= proportion && proportion < 0.1) {
+              } else if (24000 <= population && population < 32000) {
                 return '#E08465';
-              } else if (0.1 <= proportion && proportion < 1.0) {
+              } else if (32000 <= population && population < 40000) {
                 return '#D65C45';
-              } else if (1.0 <= proportion && proportion < 2.0) {
+              } else if (40000 <= population && population < 48000) {
                 return '#CC3528';
-              } else {
+              } else if (48000 <= population && population < 64000) {
                 return '#C40A09';
+              } else {
+                return '#500A09';
               }
             });
         }
